@@ -8,6 +8,7 @@
 
 import Foundation
 
+/// StateInfo
 struct StateInfo: Codable, Identifiable {
     let id = UUID()
     let name: String

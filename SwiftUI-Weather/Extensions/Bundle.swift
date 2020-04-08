@@ -8,7 +8,16 @@
 
 import Foundation
 
+/// Bundle extension to add custom behavior
 extension Bundle {
+    
+    /// Decode the data into a T type object with Combine
+    /// - Parameters:
+    ///   - type: the type of object to be decoded into
+    ///   - file: the file
+    ///   - dateDecodingStrategy: Decoding strategy for JSON
+    ///   - keyDecodingStrategy: Key Decoding strategy for JSOn
+    /// - Returns: A Generic type object, specified when decode has been called
     func decode<T: Decodable>(_ type: T.Type, from file: String, dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .deferredToDate, keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) -> T {
         guard let url = self.url(forResource: file, withExtension: nil) else {
             fatalError("Failed to locate \(file) in bundle.")

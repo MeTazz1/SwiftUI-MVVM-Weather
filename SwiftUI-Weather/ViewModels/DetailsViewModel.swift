@@ -12,13 +12,17 @@ import Combine
 /// ViewModel for StateView
 final class DetailsViewModel: ObservableViewModel<WeatherInfo>  {
     
-    /// The selected state
+    /// The selected state & city
     var city: CityInfo
     var state: StateInfo
     
+    /// Display date in view
     var stringDate = ""
     
     /// Initiliaze objet and its properties
+    /// - Parameters:
+    ///   - city: The city to be displayed
+    ///   - state: The state to be displayed
     init(for city: CityInfo, in state: StateInfo) {
         self.city = city
         self.state = state
@@ -35,39 +39,68 @@ final class DetailsViewModel: ObservableViewModel<WeatherInfo>  {
         self.deinitData()
     }
     
+    /// should display the view for the current dataSource
+    /// - Returns: a Boolean that specifies if view can be displayed
     func shouldDisplay() -> Bool {
-        if self.dataSource.main != nil && self.dataSource.coord != nil && self.dataSource.sys != nil {
-            return true
-        }
-        return false
+        guard let _ = self.dataSource.main else { return false }
+        guard let _ = self.dataSource.coord else { return false }
+        guard let _ = self.dataSource.sys else { return false }
+        return true
     }
     
+    /// Get the right SF Symbol based on the main weather
+    /// - Returns: the SF Symbol name to be dispayed
     func mainSFSymbol() -> String {
-        if let weathers = self.dataSource.weather {
-            for weather in weathers {
-                print("-------- \(weather.main)")
-                switch weather.main {
-                case "Clear":
+        guard let weathers = self.dataSource.weather else { return "sun.min" }
+        let hour = Calendar.current.component(.hour, from: Date())
+      
+        for weather in weathers {
+            print("-------- \(weather.main)")
+            switch weather.main {
+            case "Clear":
+                if hour >= 7 && hour <= 19 {
                     return "sun.max"
-                case "Clouds":
+                } else { return "moon" }
+                
+            case "Clouds":
+                if hour >= 7 && hour <= 19 {
                     return "cloud"
-                case "Rain":
-                    return "cloud.drizzle"
-                case "Haze":
-                    return "sun.haze"
-                default:
-                    return "sun.min"
-                }
+                } else { return "cloud.moon" }
+            case "Rain":
+                if hour >= 7 && hour <= 19 {
+                    return "cloud.rain"
+                } else { return "cloud.moon.rain" }
+            case "Haze":
+                return "sun.haze"
+            default:
+                return "sun.min"
             }
         }
-        // Clear - clear sky
-        // Clouds - few clouds, scattered clouds, broken clouds, overcast clouds
-        // Rain - moderate rain, light rain,
-        // Haze - haze
+        return "sun.min"
+    }
+    
+    /// Based on weather and daytime, returns the right background image name
+    /// - Returns: the background image name
+    func mainBackgroundImage() -> String {
+        let hour = Calendar.current.component(.hour, from: Date())
         
+        guard let weathers = self.dataSource.weather else {
+            if hour <= 7 || hour >= 19 { return "backgroundNight" }
+            return "backgroundSunny"
+        }
+
+        if hour <= 7 || hour >= 19 { return "backgroundNight" }
         
-        
-        return ""
+        for weather in weathers {
+            switch weather.main {
+            case "Clear": return "backgroundSunny"
+            case "Clouds": return "backgroundCloudy"
+            case "Rain": return "backgroundRainy"
+            case "Haze": return "backgroundHaze"
+            default: return "backgroundSunny"
+            }
+        }
+        return "backgroundSunny"
     }
 }
 
@@ -81,13 +114,10 @@ extension DetailsViewModel: ViewModelDataSource {
             do {
                 self.dataSource = try jsonDecoder.decode(WeatherInfo.self, from: data)
                 print("dataSource set: \(self.dataSource.name)")
-            } catch {
-                print(error.localizedDescription)
-            }
+            } catch { print(error.localizedDescription) }
         })
     }
     
     /// Unload and deinit ViewModelDataSource
-    func deinitData() {
-    }
+    func deinitData() { }
 }

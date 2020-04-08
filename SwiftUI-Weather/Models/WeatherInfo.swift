@@ -81,5 +81,4 @@ struct WeatherInfo: Codable, Identifiable {
         self.weather = nil
         self.wind = nil
     }
-    
 }
